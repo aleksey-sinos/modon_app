@@ -27,6 +27,14 @@ export interface MapHeatmapAreaData {
   weight?: number;
 }
 
+export interface MapBubbleData {
+  id: string;
+  area: string;
+  year: number;
+  value: number;
+  color: string;
+}
+
 interface ResolvedHeatmapAreaData extends MapHeatmapAreaData {
   position: LatLng;
 }
@@ -35,6 +43,7 @@ interface DubaiMapProps {
   apiKey: string;
   markers?: MapMarkerData[];
   heatmapAreas?: MapHeatmapAreaData[];
+  bubbles?: MapBubbleData[];
   height?: string;
 }
 
@@ -190,7 +199,77 @@ function TransactionHeatmap({ areas }: { areas: MapHeatmapAreaData[] }) {
   return null;
 }
 
-export default function DubaiMap({ apiKey, markers = [], heatmapAreas = [], height = '500px' }: DubaiMapProps) {
+function SupplyBubbleLayer({ bubbles }: { bubbles: MapBubbleData[] }) {
+  const geocodingLibrary = useMapsLibrary('geocoding');
+  const [positionByArea, setPositionByArea] = useState<Record<string, LatLng>>({});
+
+  const uniqueAreas = useMemo(() => [...new Set(bubbles.map((b) => b.area))], [bubbles]);
+  const maxValue = useMemo(() => Math.max(1, ...bubbles.map((b) => b.value)), [bubbles]);
+
+  useEffect(() => {
+    if (!uniqueAreas.length || !geocodingLibrary || typeof google === 'undefined') return;
+    let cancelled = false;
+    const cache = readGeocodeCache();
+    const resolved: Record<string, LatLng> = {};
+    const missing: string[] = [];
+
+    for (const area of uniqueAreas) {
+      const cached = cache[toAreaKey(area)];
+      if (cached) {
+        resolved[area] = cached;
+      } else {
+        missing.push(area);
+      }
+    }
+    setPositionByArea({ ...resolved });
+
+    if (!missing.length) return;
+    const geocoder = new google.maps.Geocoder();
+    const resolveAll = async () => {
+      const nextCache = { ...cache };
+      const next = { ...resolved };
+      for (const area of missing) {
+        const pos = await geocodeArea(geocoder, area);
+        if (!pos || cancelled) continue;
+        nextCache[toAreaKey(area)] = pos;
+        writeGeocodeCache(nextCache);
+        next[area] = pos;
+        setPositionByArea({ ...next });
+      }
+    };
+    void resolveAll();
+    return () => { cancelled = true; };
+  }, [uniqueAreas, geocodingLibrary]);
+
+  return (
+    <>
+      {bubbles.map((bubble) => {
+        const pos = positionByArea[bubble.area];
+        if (!pos) return null;
+        const norm = Math.sqrt(bubble.value / maxValue);
+        const size = Math.round(14 + norm * 58);
+        return (
+          <AdvancedMarker key={bubble.id} position={pos}>
+            <div
+              title={`${bubble.area} ${bubble.year}: ${Math.round(bubble.value).toLocaleString()} units`}
+              style={{
+                width: `${size}px`,
+                height: `${size}px`,
+                borderRadius: '50%',
+                background: `${bubble.color}44`,
+                border: `2px solid ${bubble.color}`,
+                cursor: 'default',
+                pointerEvents: 'none',
+              }}
+            />
+          </AdvancedMarker>
+        );
+      })}
+    </>
+  );
+}
+
+export default function DubaiMap({ apiKey, markers = [], heatmapAreas = [], bubbles = [], height = '500px' }: DubaiMapProps) {
   const [selected, setSelected] = useState<MapMarkerData | null>(null);
   const visibleMarkers = useMemo(() => markers.slice(0, MAX_MARKERS), [markers]);
 
@@ -207,6 +286,7 @@ export default function DubaiMap({ apiKey, markers = [], heatmapAreas = [], heig
           mapTypeControl={false}
         >
           {heatmapAreas.length > 0 ? <TransactionHeatmap areas={heatmapAreas} /> : null}
+          {bubbles.length > 0 ? <SupplyBubbleLayer bubbles={bubbles} /> : null}
 
           {visibleMarkers.map((marker) => (
             <AdvancedMarker

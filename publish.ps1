@@ -28,6 +28,10 @@ docker login $ACR_SERVER -u $ACR_NAME -p $ACR_PASSWORD
 
 Write-Host "Pushing image..."
 docker push "$ACR_SERVER/modon-app:$TAG"
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Push failed. Aborting deployment."
+    exit 1
+}
 
 Write-Host "Updating secret..."
 az containerapp secret set `

@@ -39,6 +39,7 @@ import type {
   SubTypeRow,
   PipelineByYearRow,
   CompletionBandRow,
+  SupplyAreaHeatmapItem,
   LocationContextRow,
 } from './types';
 
@@ -234,6 +235,9 @@ export const getPipelineByYear = (from_year?: number) =>
 
 export const getCompletionBands = () =>
   apiFetch<CompletionBandRow[]>('/supply/completion-bands');
+
+export const getSupplyAreaHeatmap = (top = 80) =>
+  apiFetch<SupplyAreaHeatmapItem[]>('/supply/area-heatmap', { top });
 
 export const getNearestMetros = (top = 12, market: 'rent' | 'sale' = 'rent') =>
   apiFetch<LocationContextRow[]>('/supply/nearest-metros', { top, market });

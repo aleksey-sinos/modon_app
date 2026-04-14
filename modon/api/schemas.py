@@ -345,6 +345,13 @@ class CompletionBandRow(BaseModel):
     projects: int
 
 
+class SupplyAreaHeatmapPoint(BaseModel):
+    area: str
+    year: int
+    project_count: int
+    units: float
+
+
 class LocationContextRow(BaseModel):
     name: str
     contract_count: int

@@ -9,8 +9,8 @@ import polars as pl
 logger = logging.getLogger(__name__)
 
 RENT_AREA_REPORTING_MIN_SQM = 15.0
-RENT_AREA_REPORTING_MAX_SQM = 10_000.0
-RENT_RATE_MAX_AED_PER_SQM = 10_000.0
+RENT_AREA_REPORTING_MAX_SQM = 100_000.0
+RENT_RATE_MAX_AED_PER_SQM = 100_000.0
 
 
 def _log_null_stats(df: pl.DataFrame, columns: list[str], stage: str) -> None:

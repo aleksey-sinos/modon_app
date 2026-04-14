@@ -7,7 +7,7 @@ import polars as pl
 from fastapi import APIRouter, Depends, Query
 
 from api.deps import AppState, get_state
-from api.schemas import CompletionBandRow, LandTypeRow, LocationContextRow, PipelineByYearRow, SubTypeRow, SupplyKPIs
+from api.schemas import CompletionBandRow, LandTypeRow, LocationContextRow, PipelineByYearRow, SubTypeRow, SupplyAreaHeatmapPoint, SupplyKPIs
 
 router = APIRouter(prefix="/supply", tags=["supply"])
 
@@ -275,6 +275,44 @@ def get_completion_bands(state: AppState = Depends(get_state)) -> list[Completio
     return [
         CompletionBandRow(band=str(row["band"]), projects=int(row["projects"]))
         for row in bands.iter_rows(named=True)
+    ]
+
+
+@router.get("/area-heatmap", response_model=list[SupplyAreaHeatmapPoint])
+def get_area_heatmap(
+    top: int = Query(80, ge=1, le=200),
+    from_year: int = Query(2024),
+    state: AppState = Depends(get_state),
+) -> list[SupplyAreaHeatmapPoint]:
+    projects = state.projects
+    if "AREA_EN" not in projects.columns or "END_DATE" not in projects.columns:
+        return []
+    area_col = pl.col("AREA_EN").cast(pl.Utf8)
+    agg = (
+        projects.filter(
+            area_col.is_not_null()
+            & (area_col.str.strip_chars() != "")
+            & pl.col("END_DATE").is_not_null()
+            & (pl.col("END_DATE").dt.year() >= from_year)
+        )
+        .with_columns(pl.col("END_DATE").dt.year().alias("completion_year"))
+        .group_by(["AREA_EN", "completion_year"])
+        .agg(
+            pl.len().alias("project_count"),
+            pl.col("CNT_UNIT").cast(pl.Float64, strict=False).fill_null(0).sum().alias("units"),
+        )
+        .filter(pl.col("units") > 0)
+        .sort(["AREA_EN", "completion_year"])
+        .head(top)
+    )
+    return [
+        SupplyAreaHeatmapPoint(
+            area=str(row["AREA_EN"]),
+            year=int(row["completion_year"]),
+            project_count=int(row["project_count"]),
+            units=float(row["units"] or 0),
+        )
+        for row in agg.iter_rows(named=True)
     ]
 
 

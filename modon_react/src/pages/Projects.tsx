@@ -4,9 +4,11 @@ import {
 } from 'recharts';
 import StatCard from '../components/ui/StatCard';
 import PageHeader from '../components/ui/PageHeader';
+import DubaiMap from '../components/map/DubaiMap';
+import type { MapBubbleData } from '../components/map/DubaiMap';
 import { LoadingSpinner, ErrorMessage } from '../components/ui/LoadingState';
 import { useFetch } from '../hooks/useFetch';
-import { getSupplyKPIs, getPipelineByYear, getCompletionBands } from '../api/services';
+import { getSupplyKPIs, getPipelineByYear, getCompletionBands, getSupplyAreaHeatmap } from '../api/services';
 import { getDevelopers } from '../api/services';
 
 function truncateSingleLine(value: string, maxLength = 22) {
@@ -15,16 +17,40 @@ function truncateSingleLine(value: string, maxLength = 22) {
   return `${clean.slice(0, maxLength - 1)}…`;
 }
 
+const MAPS_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string;
+
+const YEAR_COLORS: Record<number, string> = {
+  2024: '#3b82f6',
+  2025: '#10b981',
+  2026: '#f59e0b',
+  2027: '#8b5cf6',
+  2028: '#f43f5e',
+  2029: '#06b6d4',
+  2030: '#f97316',
+};
+
 export default function Projects() {
   const kpiFetcher      = useCallback(() => getSupplyKPIs(), []);
   const pipelineFetcher = useCallback(() => getPipelineByYear(), []);
   const bandsFetcher    = useCallback(() => getCompletionBands(), []);
   const devFetcher      = useCallback(() => getDevelopers(), []);
+  const heatmapFetcher  = useCallback(() => getSupplyAreaHeatmap(80), []);
 
   const { data: kpis,     loading: kpisLoading, error: kpisError } = useFetch(kpiFetcher);
   const { data: pipeline, loading: plLoading } = useFetch(pipelineFetcher);
   const { data: bands } = useFetch(bandsFetcher);
   const { data: devs,     loading: devsLoading } = useFetch(devFetcher);
+  const { data: heatmap,  loading: heatmapLoading } = useFetch(heatmapFetcher);
+
+  const bubbles: MapBubbleData[] = (heatmap ?? []).map((item) => ({
+    id: `${item.area}-${item.year}`,
+    area: item.area,
+    year: item.year,
+    value: item.units,
+    color: YEAR_COLORS[item.year] ?? '#6b7280',
+  }));
+
+  const activeYears = [...new Set((heatmap ?? []).map((i) => i.year))].sort();
 
   // Top 15 developers by active projects
   const topDevs = (devs ?? [])
@@ -95,6 +121,32 @@ export default function Projects() {
               <Bar dataKey="pending" name="Pending" fill="#8b5cf6" stackId="a" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
+        )}
+      </div>
+
+      {/* Supply bubble map */}
+      <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-card">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-medium text-gray-600">Units Pipeline Map</h3>
+            <p className="mt-1 text-xs text-gray-400">Bubble size = units announced. Each color represents a completion year.</p>
+          </div>
+          {activeYears.length > 0 && (
+            <div className="flex flex-wrap gap-3">
+              {activeYears.map((year) => (
+                <div key={year} className="flex items-center gap-1.5">
+                  <span
+                    className="inline-block h-3 w-3 rounded-full"
+                    style={{ background: YEAR_COLORS[year] ?? '#6b7280' }}
+                  />
+                  <span className="text-xs text-gray-600">{year}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        {heatmapLoading && !heatmap ? <LoadingSpinner /> : (
+          <DubaiMap apiKey={MAPS_KEY} markers={[]} bubbles={bubbles} height="420px" />
         )}
       </div>
     </div>

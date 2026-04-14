@@ -195,7 +195,8 @@ export default function Deals() {
                   dataKey="transaction_count"
                   name="Transactions"
                   radius={[0, 4, 4, 0]}
-                  background={({ x, y, width, height, index }: { x?: number; y?: number; width?: number; height?: number; index?: number }) => {
+                  background={(props: unknown) => {
+                    const { x, y, width, height, index } = props as { x?: number; y?: number; width?: number; height?: number; index?: number };
                     const item = (byType ?? [])[index ?? -1];
                     if (!item) return <g />;
                     return <rect x={x} y={y} width={width} height={height} fill="transparent" cursor="pointer" onClick={() => setSelectedPropType((current) => current === item.prop_type ? null : item.prop_type)} />;
@@ -305,7 +306,8 @@ export default function Deals() {
                 dataKey="median_price_sqm"
                 name="Median Price/sqm"
                 radius={[0, 4, 4, 0]}
-                background={({ x, y, width, height, index }: { x?: number; y?: number; width?: number; height?: number; index?: number }) => {
+                background={(props: unknown) => {
+                  const { x, y, width, height, index } = props as { x?: number; y?: number; width?: number; height?: number; index?: number };
                   const item = (byArea ?? [])[index ?? -1];
                   if (!item) return <g />;
                   return <rect x={x} y={y} width={width} height={height} fill="transparent" cursor="pointer" onClick={() => setFilterArea(state.filterArea === item.area ? '' : item.area)} />;

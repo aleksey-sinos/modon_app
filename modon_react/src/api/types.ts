@@ -363,6 +363,13 @@ export interface CompletionBandRow {
   projects: number;
 }
 
+export interface SupplyAreaHeatmapItem {
+  area: string;
+  year: number;
+  project_count: number;
+  units: number;
+}
+
 export interface LocationContextRow {
   name: string;
   contract_count: number;

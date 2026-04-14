@@ -495,7 +495,8 @@ export default function Dashboard() {
                         fill="#0f766e"
                         radius={[0, 4, 4, 0]}
                         isAnimationActive={false}
-                        background={({ x, y, width, height, index }: { x?: number; y?: number; width?: number; height?: number; index?: number }) => {
+                        background={(props: unknown) => {
+                          const { x, y, width, height, index } = props as { x?: number; y?: number; width?: number; height?: number; index?: number };
                           const entry = trendingAreasChartData[index ?? -1];
                           if (!entry) return <g />;
                           return <rect x={x} y={y} width={width} height={height} fill="transparent" cursor="pointer" onClick={() => setSelectedDevelopmentArea((current) => (current === entry.area ? null : entry.area))} />;
