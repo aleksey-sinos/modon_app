@@ -163,12 +163,12 @@ def get_market_activity(state: AppState = Depends(get_state)) -> MarketActivityS
         sales_count=_count_metric(sales_current.height, sales_previous.height),
         rent_count=_count_metric(rents_current.height, rents_previous.height),
         sales_price_per_sqm=_float_metric(
-            _mean_or_none(sales_current, "PRICE_PER_SQM"),
-            _mean_or_none(sales_previous, "PRICE_PER_SQM"),
+            _median_or_none(sales_current, "PRICE_PER_SQM"),
+            _median_or_none(sales_previous, "PRICE_PER_SQM"),
         ),
         rent_price_per_sqm=_float_metric(
-            _mean_or_none(rents_current.filter(pl.col("IS_VALID_AREA_FOR_RATE")), "RENT_PER_SQM"),
-            _mean_or_none(rents_previous.filter(pl.col("IS_VALID_AREA_FOR_RATE")), "RENT_PER_SQM"),
+            _median_or_none(rents_current.filter(pl.col("IS_VALID_AREA_FOR_RATE")), "RENT_PER_SQM"),
+            _median_or_none(rents_previous.filter(pl.col("IS_VALID_AREA_FOR_RATE")), "RENT_PER_SQM"),
         ),
     )
 
@@ -955,6 +955,12 @@ def _mean_or_none(df: pl.DataFrame, col: str) -> Optional[float]:
     if df.height == 0 or col not in df.columns:
         return None
     return _opt_float(df[col].mean())
+
+
+def _median_or_none(df: pl.DataFrame, col: str) -> Optional[float]:
+    if df.height == 0 or col not in df.columns:
+        return None
+    return _opt_float(df[col].median())
 
 
 def _fmt_delta_phrase(delta_pct: Optional[float]) -> str:
