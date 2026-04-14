@@ -8,7 +8,9 @@ import polars as pl
 
 logger = logging.getLogger(__name__)
 
+RENT_AREA_REPORTING_MIN_SQM = 15.0
 RENT_AREA_REPORTING_MAX_SQM = 10_000.0
+RENT_RATE_MAX_AED_PER_SQM = 10_000.0
 
 
 def _log_null_stats(df: pl.DataFrame, columns: list[str], stage: str) -> None:
@@ -303,25 +305,40 @@ def prepare_rents(rents: pl.DataFrame) -> pl.DataFrame:
     )
     rents = add_join_keys(rents)
 
-    valid_area_for_rate = (pl.col("EFFECTIVE_AREA") > 0) & (
-        pl.col("EFFECTIVE_AREA") < RENT_AREA_REPORTING_MAX_SQM
+    valid_area_for_rate = (
+        (pl.col("EFFECTIVE_AREA") >= RENT_AREA_REPORTING_MIN_SQM) &
+        (pl.col("EFFECTIVE_AREA") < RENT_AREA_REPORTING_MAX_SQM)
     )
     valid_amount = pl.col("ANNUAL_AMOUNT") > 0
 
-    return rents.with_columns(
-        [
-            pl.col("ACTUAL_AREA").alias("EFFECTIVE_AREA"),
-            pl.col("REGISTRATION_DATE").dt.truncate("1mo").alias("MONTH"),
-        ]
-    ).with_columns(
-        [
-            valid_area_for_rate.alias("IS_VALID_AREA_FOR_RATE"),
-            (valid_amount & (pl.col("EFFECTIVE_AREA") > 0)).alias("IS_VALID_RENT_RECORD"),
-            pl.when(valid_amount & valid_area_for_rate)
-            .then(pl.col("ANNUAL_AMOUNT") / pl.col("EFFECTIVE_AREA"))
+    return (
+        rents.with_columns(
+            [
+                pl.col("ACTUAL_AREA").alias("EFFECTIVE_AREA"),
+                pl.col("REGISTRATION_DATE").dt.truncate("1mo").alias("MONTH"),
+            ]
+        )
+        .with_columns(
+            [
+                (valid_amount & (pl.col("EFFECTIVE_AREA") > 0)).alias("IS_VALID_RENT_RECORD"),
+                pl.when(valid_amount & (pl.col("EFFECTIVE_AREA") > 0))
+                .then(pl.col("ANNUAL_AMOUNT") / pl.col("EFFECTIVE_AREA"))
+                .otherwise(None)
+                .alias("RENT_PER_SQM"),
+            ]
+        )
+        .with_columns(
+            (
+                valid_area_for_rate &
+                (pl.col("RENT_PER_SQM") <= RENT_RATE_MAX_AED_PER_SQM)
+            ).alias("IS_VALID_AREA_FOR_RATE")
+        )
+        .with_columns(
+            pl.when(pl.col("IS_VALID_AREA_FOR_RATE"))
+            .then(pl.col("RENT_PER_SQM"))
             .otherwise(None)
-            .alias("RENT_PER_SQM"),
-        ]
+            .alias("RENT_PER_SQM")
+        )
     )
 
 
