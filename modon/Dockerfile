@@ -1,6 +1,7 @@
 # Stage 1: build React frontend
 FROM node:22-alpine AS frontend
 WORKDIR /frontend
+ARG CACHE_BUST
 COPY modon_react/package*.json ./
 RUN npm ci
 COPY modon_react/ .
