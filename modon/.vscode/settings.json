@@ -1,0 +1,16 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^Set-Location \"d:/projects/modon\"; d:/projects/modon/\\.venv/Scripts/python\\.exe load_csvs_polars\\.py$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^Set-Location \"d:/projects/modon\"; d:/projects/modon/\\.venv/Scripts/python\\.exe -c \"import polars as pl; t=pl\\.read_csv\\('outputs/transactions_enriched\\.csv'\\); r=pl\\.read_csv\\('outputs/rents_enriched\\.csv'\\);\nfor name,df in \\[\\('transactions',t\\),\\('rents',r\\)\\]:\n    n=df\\.height\n    dev=df\\.select\\(pl\\.col\\('DEVELOPER_EN'\\)\\.is_not_null\\(\\)\\.sum\\(\\)\\)\\.item\\(\\)\n    land=df\\.select\\(pl\\.col\\('LAND_TYPE_EN'\\)\\.is_not_null\\(\\)\\.sum\\(\\)\\)\\.item\\(\\)\n    print\\(name, 'rows', n, 'dev_cov', round\\(dev/n\\*100,2\\), 'land_cov', round\\(land/n\\*100,2\\)\\)\n\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^Set-Location \"d:/projects/modon\"; d:/projects/modon/\\.venv/Scripts/python\\.exe -c \"import polars as pl\nfor f,col in \\[\\('performance_by_developer\\.csv','DEVELOPER_EN'\\),\\('performance_by_land_type\\.csv','LAND_TYPE_EN'\\)\\]:\n    df=pl\\.read_csv\\('outputs/'\\+f, try_parse_dates=True\\)\n    latest=df\\.select\\(pl\\.col\\('MONTH'\\)\\.max\\(\\)\\)\\.item\\(\\)\n    d=df\\.filter\\(pl\\.col\\('MONTH'\\)==latest\\)\n    print\\(f, 'latest', latest, 'rows', d\\.height, 'null_key_rows', d\\.filter\\(pl\\.col\\(col\\)\\.is_null\\(\\)\\)\\.height\\)\n\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

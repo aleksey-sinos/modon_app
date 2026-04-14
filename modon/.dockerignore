@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+tests/
+outputs/
+data/raw/
+*.ipynb
+.env
+app_plotly.py
+app.py

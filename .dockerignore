@@ -1,0 +1,16 @@
+modon/.venv/
+modon/__pycache__/
+modon/**/__pycache__/
+modon/**/*.pyc
+modon/.pytest_cache/
+modon/tests/
+modon/outputs/
+modon/data/raw/
+modon/*.ipynb
+modon/src/*.ipynb
+modon/.env
+modon/app_plotly.py
+modon/app.py
+modon_react/node_modules/
+modon_react/dist/
+modon_react/.env

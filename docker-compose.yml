@@ -1,0 +1,9 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: modon/Dockerfile
+    environment:
+      - CORS_ORIGINS=*
+    ports:
+      - "8000:8000"
