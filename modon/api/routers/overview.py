@@ -659,8 +659,8 @@ def _build_market_news_prompt(facts: dict) -> str:
 
 
 def _get_gemini_model() -> str:
-    configured = os.getenv("GEMINI_MODEL", "gemini-3-flash").strip()
-    return configured.removeprefix("models/") or "gemini-3-flash"
+    configured = os.getenv("GEMINI_MODEL", "gemini-2.0-flash").strip()
+    return configured.removeprefix("models/") or "gemini-2.0-flash"
 
 
 def _extract_json_payload(text: str) -> Optional[dict]:
@@ -727,8 +727,8 @@ def _generate_gemini_json_response(
 def _generate_market_summary_with_gemini(api_key: str, model: str, prompt: str) -> Optional[dict]:
     client = genai.Client(api_key=api_key)
     models_to_try = [model]
-    if model != "gemini-3-flash":
-        models_to_try.append("gemini-3-flash")
+    if model != "gemini-2.0-flash":
+        models_to_try.append("gemini-2.0-flash")
 
     for candidate_model in models_to_try:
         for use_search in (True, False):
@@ -754,6 +754,11 @@ def _generate_market_summary_with_gemini(api_key: str, model: str, prompt: str) 
             parsed, sources = generated
             normalized = _normalize_market_summary_payload(parsed)
             if normalized is None:
+                logger.warning(
+                    "Gemini market summary normalization failed for model %s (search=%s)",
+                    candidate_model,
+                    use_search,
+                )
                 continue
 
             normalized["model"] = candidate_model
@@ -766,8 +771,8 @@ def _generate_market_summary_with_gemini(api_key: str, model: str, prompt: str) 
 def _generate_market_news_with_gemini(api_key: str, model: str, prompt: str) -> Optional[dict]:
     client = genai.Client(api_key=api_key)
     models_to_try = [model]
-    if model != "gemini-3-flash":
-        models_to_try.append("gemini-3-flash")
+    if model != "gemini-2.0-flash":
+        models_to_try.append("gemini-2.0-flash")
 
     for candidate_model in models_to_try:
         for use_search in (True, False):
@@ -804,11 +809,17 @@ def _generate_market_news_with_gemini(api_key: str, model: str, prompt: str) -> 
 
 def _normalize_market_summary_payload(parsed: object) -> Optional[dict]:
     if not isinstance(parsed, dict):
+        logger.warning("Gemini market summary: payload is not a dict: %r", type(parsed))
         return None
 
     summary = parsed.get("summary")
     sections = parsed.get("sections")
-    if not isinstance(summary, str) or not isinstance(sections, list) or len(sections) != 3:
+    if not isinstance(summary, str) or not isinstance(sections, list) or len(sections) == 0:
+        logger.warning(
+            "Gemini market summary: unexpected shape — summary=%r, sections=%r",
+            type(summary),
+            [type(s) for s in sections] if isinstance(sections, list) else sections,
+        )
         return None
 
     normalized_sections = []
