@@ -142,7 +142,17 @@ export default function Rentals() {
                 }
                 return value.toLocaleString();
               }} />
-              <Bar dataKey="contract_count" name="Contracts" radius={[0, 4, 4, 0]}>
+              <Bar
+                dataKey="contract_count"
+                name="Contracts"
+                radius={[0, 4, 4, 0]}
+                background={(props: unknown) => {
+                  const { x, y, width, height, index } = props as { x?: number; y?: number; width?: number; height?: number; index?: number };
+                  const item = (byType ?? [])[index ?? -1];
+                  if (!item) return <g />;
+                  return <rect x={x} y={y} width={width} height={height} fill="transparent" cursor="pointer" onClick={() => setSelectedPropType((current) => current === item.prop_type ? null : item.prop_type)} />;
+                }}
+              >
                 {(byType ?? []).map((item) => {
                   const isSelected = item.prop_type === selectedPropType;
                   const isMuted = selectedPropType !== null && !isSelected;
@@ -245,7 +255,17 @@ export default function Rentals() {
               <XAxis type="number" tick={{ fontSize: 10 }} />
               <YAxis type="category" dataKey="area" tick={{ fontSize: 10 }} width={140} interval={0} tickMargin={8} />
               <Tooltip formatter={(v: number) => `AED ${v.toLocaleString()}`} />
-              <Bar dataKey="median_rent_sqm" name="Median Rent/sqm" radius={[0, 4, 4, 0]}>
+              <Bar
+                dataKey="median_rent_sqm"
+                name="Median Rent/sqm"
+                radius={[0, 4, 4, 0]}
+                background={(props: unknown) => {
+                  const { x, y, width, height, index } = props as { x?: number; y?: number; width?: number; height?: number; index?: number };
+                  const item = (byArea ?? [])[index ?? -1];
+                  if (!item) return <g />;
+                  return <rect x={x} y={y} width={width} height={height} fill="transparent" cursor="pointer" onClick={() => setFilterArea(state.filterArea === item.area ? '' : item.area)} />;
+                }}
+              >
                 {(byArea ?? []).map((item) => {
                   const isSelected = item.area === state.filterArea;
                   const isMuted = Boolean(state.filterArea) && !isSelected;

@@ -191,7 +191,16 @@ export default function Deals() {
                   }
                   return value.toLocaleString();
                 }} />
-                <Bar dataKey="transaction_count" name="Transactions" radius={[0, 4, 4, 0]}>
+                <Bar
+                  dataKey="transaction_count"
+                  name="Transactions"
+                  radius={[0, 4, 4, 0]}
+                  background={({ x, y, width, height, index }: { x?: number; y?: number; width?: number; height?: number; index?: number }) => {
+                    const item = (byType ?? [])[index ?? -1];
+                    if (!item) return <g />;
+                    return <rect x={x} y={y} width={width} height={height} fill="transparent" cursor="pointer" onClick={() => setSelectedPropType((current) => current === item.prop_type ? null : item.prop_type)} />;
+                  }}
+                >
                   {(byType ?? []).map((item) => {
                     const isSelected = item.prop_type === selectedPropType;
                     const isMuted = selectedPropType !== null && !isSelected;
@@ -292,7 +301,16 @@ export default function Deals() {
               <XAxis type="number" tick={{ fontSize: 10 }} />
               <YAxis type="category" dataKey="area" tick={{ fontSize: 10 }} width={140} interval={0} tickMargin={8} />
               <Tooltip formatter={(value: number) => `AED ${value.toLocaleString()}`} />
-              <Bar dataKey="median_price_sqm" name="Median Price/sqm" radius={[0, 4, 4, 0]}>
+              <Bar
+                dataKey="median_price_sqm"
+                name="Median Price/sqm"
+                radius={[0, 4, 4, 0]}
+                background={({ x, y, width, height, index }: { x?: number; y?: number; width?: number; height?: number; index?: number }) => {
+                  const item = (byArea ?? [])[index ?? -1];
+                  if (!item) return <g />;
+                  return <rect x={x} y={y} width={width} height={height} fill="transparent" cursor="pointer" onClick={() => setFilterArea(state.filterArea === item.area ? '' : item.area)} />;
+                }}
+              >
                 {(byArea ?? []).map((item) => {
                   const isSelected = item.area === state.filterArea;
                   const isMuted = Boolean(state.filterArea) && !isSelected;
