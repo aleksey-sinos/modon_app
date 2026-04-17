@@ -1,2 +1,4 @@
 .env
 .env.example
+modon/api/__pycache__/*
+

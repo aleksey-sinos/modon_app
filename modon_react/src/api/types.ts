@@ -284,8 +284,8 @@ export interface PropertyTypeTrendItem {
 export interface RentKPIs {
   total_contracts: number;
   total_annual_rent: number;
-  median_rent_sqm: number;
-  avg_annual_contract: number;
+  median_rent_sqm: number | null;
+  avg_annual_contract: number | null;
 }
 
 export interface RentByTypeRow {

@@ -193,8 +193,8 @@ export default function Rentals() {
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatCard label="Total Contracts" value={kpis.total_contracts.toLocaleString()} icon="📋" color="blue" />
           <StatCard label="Total Annual Rent" value={fmtVal(kpis.total_annual_rent)} icon="💵" color="emerald" />
-          <StatCard label="Median Rent/sqm" value={`AED ${kpis.median_rent_sqm.toLocaleString()}`} icon="📐" color="amber" />
-          <StatCard label="Avg. Contract" value={fmtVal(kpis.avg_annual_contract)} icon="📄" color="violet" />
+          <StatCard label="Median Rent/sqm" value={kpis.median_rent_sqm != null ? `AED ${kpis.median_rent_sqm.toLocaleString()}` : '—'} icon="📐" color="amber" />
+          <StatCard label="Avg. Contract" value={kpis.avg_annual_contract != null ? fmtVal(kpis.avg_annual_contract) : '—'} icon="📄" color="violet" />
         </div>
       ) : null}
 

@@ -15,6 +15,8 @@ const pageTitles: Record<string, string> = {
 };
 
 const FILTER_PAGES = new Set(['deals', 'rentals', 'valuation']);
+// Pages where the developer dropdown should NOT appear
+const NO_DEVELOPER_PAGES = new Set(['rentals']);
 
 export default function Header() {
   const {
@@ -23,6 +25,14 @@ export default function Header() {
   } = useApp();
 
   const showFilters = FILTER_PAGES.has(state.currentPage);
+  const showDeveloper = showFilters && !NO_DEVELOPER_PAGES.has(state.currentPage);
+
+  // Clear developer filter when navigating to a page that doesn't show it
+  useEffect(() => {
+    if (NO_DEVELOPER_PAGES.has(state.currentPage) && state.filterDeveloper) {
+      setFilterDeveloper('');
+    }
+  }, [state.currentPage, state.filterDeveloper, setFilterDeveloper]);
 
   const fetcher = useCallback(() => getFilterOptions({
     developer: state.filterDeveloper || undefined,
@@ -65,7 +75,8 @@ export default function Header() {
       {/* Filter bar — shown on pages that use common filters */}
       {showFilters && (
         <div className="flex flex-wrap items-center gap-3 border-t border-gray-100 px-6 py-2.5">
-          {/* Developer */}
+          {/* Developer — hidden on pages with sparse developer data */}
+          {showDeveloper && (
           <select
             value={state.filterDeveloper}
             onChange={(e) => setFilterDeveloper(e.target.value)}
@@ -74,6 +85,7 @@ export default function Header() {
             <option value="">All Developers</option>
             {opts?.developers.map((d) => <option key={d} value={d}>{d}</option>)}
           </select>
+          )}
 
           {/* Area */}
           <select
